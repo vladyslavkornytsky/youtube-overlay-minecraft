@@ -15,27 +15,27 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Compile Mod
+      - name: Compile and Package Mod
         run: |
           mkdir -p build/libs
           mkdir -p src/main/java/com/example/youtubeoverlay
           mkdir -p src/main/resources
           mkdir -p out
 
-          # Перемещаем исходные файлы на нужные места, если они в корне
+          # Раскладываем исходники
           mv -f YoutubeKeyBinding.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
           mv -f YoutubeOverlayMod.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
           mv -f YoutubeScreen.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
           mv -f fabric.mod.json src/main/resources/ 2>/dev/null || true
 
-          # Скачиваем Fabric Loader в качестве библиотеки для компиляции
+          # Скачиваем Fabric Loader
           curl -sL https://maven.fabricmc.net/net/fabricmc/fabric-loader/0.20.1/fabric-loader-0.20.1.jar -o loader.jar
 
-          # Компилируем классы мода
-          javac -encoding UTF-8 -cp loader.jar -d out $(find src/main/java -name "*.java") || true
+          # Компилируем классы напрямую
+          javac -encoding UTF-8 -cp loader.jar -d out $(find src/main/java -name "*.java")
           cp -r src/main/resources/* out/ 2>/dev/null || true
 
-          # Упаковываем всё в готовый .jar
+          # Упаковываем в .jar
           cd out
           jar -cf ../build/libs/youtube-overlay-1.0.0.jar *
           cd ..
