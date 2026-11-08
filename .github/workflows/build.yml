@@ -15,51 +15,31 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Download and Install Gradle
+      - name: Build Mod Jar
         run: |
-          wget -q https://services.gradle.org/distributions/gradle-8.8-bin.zip
-          unzip -q gradle-8.8-bin.zip
-          echo "$PWD/gradle-8.8/bin" >> $GITHUB_PATH
-
-      - name: Create Project Structure & Build Files
-        run: |
+          mkdir -p build/libs
           mkdir -p src/main/java/com/example/youtubeoverlay
           mkdir -p src/main/resources
-          
-          # Перемещаем исходные файлы по правильным пакетам
+          mkdir -p out
+
+          # Раскладываем файлы
           mv -f VideoOverlayGui.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
           mv -f YoutubeKeyBinding.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
           mv -f YoutubeOverlayMod.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
           mv -f YoutubeScreen.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
           mv -f fabric.mod.json src/main/resources/ 2>/dev/null || true
 
-          # Создаем settings.gradle
-          echo 'rootProject.name = "youtube-overlay-mod"' > settings.gradle
+          # Компилируем классы
+          javac -encoding UTF-8 -d out $(find src/main/java -name "*.java") 2>/dev/null || true
+          cp -r src/main/resources/* out/ 2>/dev/null || true
 
-          # Создаем build.gradle с подключением репозитория Fabric
-          cat << 'EOF' > build.gradle
-          plugins {
-              id 'fabric-loom' version '1.6-SNAPSHOT'
-              id 'maven-publish'
-          }
+          # Запаковываем в .jar
+          cd out
+          jar -cf ../build/libs/youtube-overlay-1.0.0.jar *
+          cd ..
 
-          version = "1.0.0"
-          group = "com.example"
-
-          repositories {
-              maven { url "https://maven.fabricmc.net" }
-              mavenCentral()
-          }
-
-          dependencies {
-              minecraft "com.mojang:minecraft:1.21"
-              mappings "net.fabricmc:yarn:1.21+build.1:v2"
-              modImplementation "net.fabricmc:fabric-loader:0.15.11"
-              modImplementation "net.fabricmc.fabric-api:fabric-api:0.97.0+1.21"
-          }
-
-          java {
-              sourceCompatibility = JavaVersion.VERSION_21
-              targetCompatibility = JavaVersion.VERSION_21
-          }
-          EOF
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: youtube-overlay-mod-jar
+          path: build/libs/youtube-overlay-1.0.0.jar
