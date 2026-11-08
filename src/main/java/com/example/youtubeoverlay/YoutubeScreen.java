@@ -1,17 +1,102 @@
 package com.example.youtubeoverlay;
 
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.FilterMode;
+import com.mojang.blaze3d.textures.GpuTextureView;
+import net.dimaskama.mcef.api.MCEFApi;
+import net.dimaskama.mcef.api.MCEFBrowser;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.render.TextureSetup;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.state.gui.BlitRenderState;
 import net.minecraft.network.chat.Component;
+import org.joml.Matrix3x2f;
 
 public class YoutubeScreen extends Screen {
+
+    private MCEFBrowser browser;
+
     public YoutubeScreen() {
-        super(Component.literal("YouTube Overlay"));
+        super(Component.literal("YouTube"));
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-        super.extractRenderState(graphics, mouseX, mouseY, partialTick);
-        graphics.fill(50, 50, this.width - 50, this.height - 50, 0xAA000000);
+    protected void init() {
+        if (browser == null) {
+            browser = MCEFApi.getInstance().createBrowser("https://www.youtube.com", false);
+        }
+        browser.resize(width, height);
+        browser.setFocus(true);
+    }
+
+    @Override
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+        GpuTextureView view = browser.getTextureView();
+        if (view != null) {
+            guiGraphics.guiRenderState.addGuiElement(new BlitRenderState(
+                    RenderPipelines.GUI_TEXTURED,
+                    TextureSetup.singleTexture(view, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR)),
+                    new Matrix3x2f(guiGraphics.pose()),
+                    0, 0, width, height,
+                    0.0F, 1.0F, 0.0F, 1.0F,
+                    0xFFFFFFFF,
+                    guiGraphics.scissorStack.peek()
+            ));
+        }
+        guiGraphics.requestCursor(browser.getCursorType());
+    }
+
+    @Override
+    public void removed() {
+        if (browser != null) {
+            browser.close();
+            browser = null;
+        }
+    }
+
+    @Override
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubled) {
+        browser.onMouseClicked(event, doubled);
+        return super.mouseClicked(event, doubled);
+    }
+
+    @Override
+    public boolean mouseReleased(MouseButtonEvent event) {
+        browser.onMouseReleased(event);
+        return super.mouseReleased(event);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+        browser.onMouseScrolled((int) mouseX, (int) mouseY, verticalAmount);
+        return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
+    }
+
+    @Override
+    public void mouseMoved(double x, double y) {
+        browser.onMouseMoved((int) x, (int) y);
+        super.mouseMoved(x, y);
+    }
+
+    @Override
+    public boolean keyPressed(KeyEvent event) {
+        browser.onKeyPressed(event);
+        return super.keyPressed(event);
+    }
+
+    @Override
+    public boolean keyReleased(KeyEvent event) {
+        browser.onKeyReleased(event);
+        return super.keyReleased(event);
+    }
+
+    @Override
+    public boolean charTyped(CharacterEvent event) {
+        browser.onCharTyped(event);
+        return super.charTyped(event);
     }
 }
