@@ -9,10 +9,17 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.render.TextureSetup;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.state.gui.BlitRenderState;
+import org.cef.browser.CefBrowser;
 import org.joml.Matrix3x2f;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 public final class YoutubeBrowser {
     private static MCEFBrowser browser;
+    private static CefBrowser cef;
+    private static boolean cefSearched = false;
+
     public static int browserW = 960;
     public static int browserH = 540;
 
@@ -38,8 +45,9 @@ public final class YoutubeBrowser {
     public static MCEFBrowser get() {
         if (browser == null) {
             browser = MCEFApi.getInstance().createBrowser("https://www.youtube.com", false);
-            browser.setWindowlessFrameRate(30);
             browser.resize(browserW, browserH);
+            cef = null;
+            cefSearched = false;
         }
         return browser;
     }
@@ -60,12 +68,63 @@ public final class YoutubeBrowser {
         if (browser != null) {
             browser.close();
             browser = null;
+            cef = null;
+            cefSearched = false;
         }
     }
 
+    // Ищем внутри MCEFBrowser объект JCEF (CefBrowser), не зная названия метода.
+    private static CefBrowser findCef() {
+        if (cefSearched || browser == null) {
+            return cef;
+        }
+        cefSearched = true;
+        Object o = browser;
+        if (o instanceof CefBrowser direct) {
+            cef = direct;
+            return cef;
+        }
+        for (Method m : o.getClass().getMethods()) {
+            if (m.getParameterCount() == 0 && CefBrowser.class.isAssignableFrom(m.getReturnType())) {
+                try {
+                    Object r = m.invoke(o);
+                    if (r instanceof CefBrowser c) {
+                        cef = c;
+                        return cef;
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+        }
+        Class<?> k = o.getClass();
+        while (k != null && k != Object.class) {
+            for (Field f : k.getDeclaredFields()) {
+                if (CefBrowser.class.isAssignableFrom(f.getType())) {
+                    try {
+                        f.setAccessible(true);
+                        Object r = f.get(o);
+                        if (r instanceof CefBrowser c) {
+                            cef = c;
+                            return cef;
+                        }
+                    } catch (Exception ignored) {
+                    }
+                }
+            }
+            k = k.getSuperclass();
+        }
+        System.err.println("[youtube-overlay] CefBrowser not found inside MCEFBrowser; ad skipper disabled");
+        return null;
+    }
+
     public static void runAdSkipper() {
-        if (browser != null) {
-            browser.executeJavaScript(AD_JS, "https://www.youtube.com", 0);
+        CefBrowser c = findCef();
+        if (c != null) {
+            try {
+                c.executeJavaScript(AD_JS, "https://www.youtube.com", 0);
+            } catch (Throwable t) {
+                System.err.println("[youtube-overlay] executeJavaScript failed: " + t);
+            }
         }
     }
 
