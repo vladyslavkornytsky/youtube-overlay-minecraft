@@ -1,20 +1,12 @@
 package com.example.youtubeoverlay;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.FilterMode;
-import com.mojang.blaze3d.textures.GpuTextureView;
-import net.dimaskama.mcef.api.MCEFApi;
 import net.dimaskama.mcef.api.MCEFBrowser;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.render.TextureSetup;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.state.gui.BlitRenderState;
 import net.minecraft.network.chat.Component;
-import org.joml.Matrix3x2f;
 
 public class YoutubeScreen extends Screen {
 
@@ -26,35 +18,21 @@ public class YoutubeScreen extends Screen {
 
     @Override
     protected void init() {
-        if (browser == null) {
-            browser = MCEFApi.getInstance().createBrowser("https://www.youtube.com", false);
-        }
-        browser.resize(width, height);
+        browser = YoutubeBrowser.get();
+        YoutubeBrowser.resize(width, height);
         browser.setFocus(true);
     }
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
-        GpuTextureView view = browser.getTextureView();
-        if (view != null) {
-            guiGraphics.guiRenderState.addGuiElement(new BlitRenderState(
-                    RenderPipelines.GUI_TEXTURED,
-                    TextureSetup.singleTexture(view, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR)),
-                    new Matrix3x2f(guiGraphics.pose()),
-                    0, 0, width, height,
-                    0.0F, 1.0F, 0.0F, 1.0F,
-                    0xFFFFFFFF,
-                    guiGraphics.scissorStack.peek()
-            ));
-        }
+        YoutubeBrowser.draw(guiGraphics, 0, 0, width, height);
         guiGraphics.requestCursor(browser.getCursorType());
     }
 
     @Override
     public void removed() {
         if (browser != null) {
-            browser.close();
-            browser = null;
+            browser.setFocus(false);
         }
     }
 
