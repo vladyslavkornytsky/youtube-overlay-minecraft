@@ -1,23 +1,5 @@
 plugins {
-    id 'fabric-loom' version '1.4-SNAPSHOT'
-    id 'maven-publish'
-}
-
-version = project.mod_version
-group = project.maven_group
-
-base {
-    archivesName = project.archives_base_name
-}
-
-repositories {
-    mavenCentral()
-    maven { url "https://maven.fabricmc.net/" }
-    maven { url "https://maven.architectury.dev/" }
-}
-
-plugins {
-    id 'fabric-loom' version '1.6-SNAPSHOT'
+    id 'fabric-loom' version '1.7-SNAPSHOT'
     id 'maven-publish'
 }
 
@@ -34,7 +16,7 @@ repositories {
 
 dependencies {
     minecraft "com.mojang:minecraft:26.2"
-    mappings "net.fabricmc:yarn:26.2+build.1:v2"
+    mappings loom.officialMojangMappings()
     modImplementation "net.fabricmc:fabric-loader:0.20.1"
     modImplementation "net.fabricmc.fabric-api:fabric-api:0.161.0+26.2"
 }
