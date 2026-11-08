@@ -1,12 +1,15 @@
 {
   "schemaVersion": 1,
   "id": "youtube-overlay",
-  "version": "${version}",
+  "version": "1.0.0",
   "name": "YouTube Overlay",
-  "description": "Смотрите YouTube видео в игре с минимизацией",
-  "authors": ["User"],
+  "description": "YouTube overlay mod",
+  "authors": [
+    "Developer"
+  ],
   "contact": {},
   "license": "MIT",
+  "icon": "assets/youtube-overlay/icon.png",
   "environment": "client",
   "entrypoints": {
     "client": [
