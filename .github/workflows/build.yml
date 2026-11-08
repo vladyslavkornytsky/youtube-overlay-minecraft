@@ -15,23 +15,53 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Build with Gradle Loom
+      - name: Build Mod with Python Script
         run: |
-          mkdir -p src/main/java/com/example/youtubeoverlay
-          mkdir -p src/main/resources
-          
-          # Раскладываем файлы по стандартной структуре Fabric
-          mv -f YoutubeKeyBinding.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
-          mv -f YoutubeOverlayMod.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
-          mv -f YoutubeScreen.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
-          mv -f fabric.mod.json src/main/resources/ 2>/dev/null || true
+          python3 -s -c "
+          import urllib.request, json, os, subprocess, glob
 
-          gradle wrapper --gradle-version 8.8
-          chmod +x gradlew
-          ./gradlew build --no-daemon
+          os.makedirs('build/libs', exist_ok=True)
+          os.makedirs('src/main/java/com/example/youtubeoverlay', exist_ok=True)
+          os.makedirs('src/main/resources', exist_ok=True)
+          os.makedirs('out', exist_ok=True)
+
+          # Перемещаем исходные файлы на случай, если они в корне
+          for f in ['YoutubeKeyBinding.java', 'YoutubeOverlayMod.java', 'YoutubeScreen.java']:
+              if os.path.exists(f):
+                  os.rename(f, os.path.join('src/main/java/com/example/youtubeoverlay', f))
+          if os.path.exists('fabric.mod.json'):
+              os.rename('fabric.mod.json', 'src/main/resources/fabric.mod.json')
+
+          print('Downloading Fabric Loader...')
+          urllib.request.urlretrieve('https://maven.fabricmc.net/net/fabricmc/fabric-loader/0.20.1/fabric-loader-0.20.1.jar', 'loader.jar')
+
+          print('Fetching Minecraft 26.2 client...')
+          manifest = json.loads(urllib.request.urlopen('https://launchermeta.mojang.com/mc/game/version_manifest_v2.json').read().decode())
+          v_url = next(v['url'] for v in manifest['versions'] if v['id'] == '26.2')
+          v_data = json.loads(urllib.request.urlopen(v_url).read().decode())
+          client_url = v_data['downloads']['client']['url']
+          urllib.request.urlretrieve(client_url, 'minecraft_client.jar')
+
+          print('Compiling source files...')
+          java_files = glob.glob('src/main/java/**/*.java', recursive=True)
+          cmd = ['javac', '-encoding', 'UTF-8', '-cp', 'minecraft_client.jar:loader.jar', '-d', 'out'] + java_files
+          subprocess.run(cmd, check=True)
+
+          print('Copying resources...')
+          for r in glob.glob('src/main/resources/**/*.*', recursive=True):
+              rel = os.path.relpath(r, 'src/main/resources')
+              dest = os.path.join('out', rel)
+              os.makedirs(os.path.dirname(dest), exist_ok=True)
+              with open(r, 'rb') as src_f, open(dest, 'wb') as dst_f:
+                  dst_f.write(src_f.read())
+
+          print('Packaging into JAR...')
+          subprocess.run(['jar', '-cf', '../build/libs/youtube-overlay-1.0.0.jar', '.'], cwd='out', check=True)
+          print('Build successful!')
+          "
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
           name: youtube-overlay-mod-jar
-          path: build/libs/*.jar
+          path: build/libs/youtube-overlay-1.0.0.jar
