@@ -36,7 +36,7 @@ jobs:
           # Создаем settings.gradle
           echo 'rootProject.name = "youtube-overlay-mod"' > settings.gradle
 
-          # Создаем build.gradle для Fabric Loom
+          # Создаем build.gradle с подключением репозитория Fabric
           cat << 'EOF' > build.gradle
           plugins {
               id 'fabric-loom' version '1.6-SNAPSHOT'
@@ -47,6 +47,7 @@ jobs:
           group = "com.example"
 
           repositories {
+              maven { url "https://maven.fabricmc.net" }
               mavenCentral()
           }
 
@@ -62,12 +63,3 @@ jobs:
               targetCompatibility = JavaVersion.VERSION_21
           }
           EOF
-
-      - name: Build with Gradle
-        run: gradle build
-
-      - name: Upload Build Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: youtube-overlay-mod-jar
-          path: build/libs/*.jar
