@@ -15,39 +15,27 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Build with Gradle
+      - name: Compile Mod
         run: |
-          gradle wrapper --gradle-version 8.8
-          chmod +x gradlew
-          ./gradlew build --no-daemon
-
-      - name: Upload Build Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: youtube-overlay-mod-jar
-          path: build/libs/*.jar
-      - name: Build Jar
-        run: |
-          mkdir -p out/com/example/youtubeoverlay
-          mkdir -p out/resources
-
-          # Раскладываем файлы из корня по пакетам
-          cp -f YoutubeKeyBinding.java out/com/example/youtubeoverlay/ 2>/dev/null || true
-          cp -f YoutubeOverlayMod.java out/com/example/youtubeoverlay/ 2>/dev/null || true
-          cp -f YoutubeScreen.java out/com/example/youtubeoverlay/ 2>/dev/null || true
-          cp -f fabric.mod.json out/ 2>/dev/null || true
-
-          # Скачиваем базовую библиотеку Loader
-          curl -sL https://maven.fabricmc.net/net/fabricmc/fabric-loader/0.15.11/fabric-loader-0.15.11.jar -o loader.jar
-
-          # Компилируем классы из папки out
-          javac -encoding UTF-8 -cp loader.jar $(find out -name "*.java") || true
-
-          # Удаляем исходные .java файлы из out, оставляем только скомпилированные .class и fabric.mod.json
-          find out -name "*.java" -type f -delete
-
-          # Собираем правильный .jar архив
           mkdir -p build/libs
+          mkdir -p src/main/java/com/example/youtubeoverlay
+          mkdir -p src/main/resources
+          mkdir -p out
+
+          # Перемещаем исходные файлы на нужные места, если они в корне
+          mv -f YoutubeKeyBinding.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
+          mv -f YoutubeOverlayMod.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
+          mv -f YoutubeScreen.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
+          mv -f fabric.mod.json src/main/resources/ 2>/dev/null || true
+
+          # Скачиваем Fabric Loader в качестве библиотеки для компиляции
+          curl -sL https://maven.fabricmc.net/net/fabricmc/fabric-loader/0.20.1/fabric-loader-0.20.1.jar -o loader.jar
+
+          # Компилируем классы мода
+          javac -encoding UTF-8 -cp loader.jar -d out $(find src/main/java -name "*.java") || true
+          cp -r src/main/resources/* out/ 2>/dev/null || true
+
+          # Упаковываем всё в готовый .jar
           cd out
           jar -cf ../build/libs/youtube-overlay-1.0.0.jar *
           cd ..
