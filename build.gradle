@@ -13,9 +13,9 @@ base {
 repositories {
     mavenCentral()
     maven { url "https://maven.fabricmc.net" }
-    exclusiveContent {
-        forRepository { maven { url = "https://api.modrinth.com/maven" } }
-        filter { includeGroup "maven.modrinth" }
+    maven {
+        url "https://maven.dimaskama.net/releases"
+        content { includeGroup "net.dimaskama" }
     }
 }
 
@@ -23,7 +23,8 @@ dependencies {
     minecraft "com.mojang:minecraft:26.2"
     implementation "net.fabricmc:fabric-loader:0.19.5"
     implementation "net.fabricmc.fabric-api:fabric-api:0.161.0+26.2"
-    implementation "maven.modrinth:mcef-modern:0.3.3+mc26.2.jcef146.0.10"
+    implementation "net.dimaskama:mcef-modern:0.3.3+mc26.2.jcef146.0.10"
+    compileOnly "me.friwi:jcef-api:jcef-d3de827+cef-146.0.10+g8219561+chromium-146.0.7680.179"
 }
 
 java {
