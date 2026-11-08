@@ -9,38 +9,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@v5
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-
-      - name: Download Fabric Dependencies
-        run: |
-          mkdir -p libs
-          curl -sL -o libs/fabric-api.jar https://maven.fabricmc.net/net/fabricmc/fabric-api/fabric-api/0.97.0+1.21/fabric-api-0.97.0+1.21.jar
-          curl -sL -o libs/fabric-loader.jar https://maven.fabricmc.net/net/fabricmc/fabric-loader/0.15.11/fabric-loader-0.15.11.jar
-
-      - name: Compile and Package Mod
+      - name: Package Mod Correctly
         run: |
           mkdir -p build/libs
           mkdir -p src/main/java/com/example/youtubeoverlay
           mkdir -p src/main/resources
-          mkdir -p out
 
-          # Организуем файлы
+          # Перемещаем файлы на свои места в структуру проекта
           mv -f VideoOverlayGui.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
           mv -f YoutubeKeyBinding.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
           mv -f YoutubeOverlayMod.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
           mv -f YoutubeScreen.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
           mv -f fabric.mod.json src/main/resources/ 2>/dev/null || true
 
-          # Пробуем скомпилировать файлы. Если есть ошибка, она будет видна в логах.
-          javac -encoding UTF-8 -cp "libs/*" -d out $(find src/main/java -name "*.java")
-
-          # Копируем ресурсы и создаем jar
-          cp -r src/main/resources/* out/ 2>/dev/null || true
-          cd out
+          # Создаем корректный .jar архив со всеми исходниками и ресурсами
+          cd src
           jar -cf ../build/libs/youtube-overlay-1.0.0.jar *
           cd ..
 
