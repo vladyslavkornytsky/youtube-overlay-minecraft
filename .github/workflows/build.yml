@@ -15,31 +15,58 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Validate Gradle Wrapper
+      - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           cache-disabled: true
 
-      - name: Create Gradle Files for Build
+      - name: Generate Fabric Project Structure & Build Files
         run: |
-          # Создаем структуру папок мода
           mkdir -p src/main/java/com/example/youtubeoverlay
           mkdir -p src/main/resources
           
-          # Перемещаем ваши файлы на свои места
+          # Перемещаем Java-файлы и ресурсы по правильным папкам
           mv -f VideoOverlayGui.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
           mv -f YoutubeKeyBinding.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
           mv -f YoutubeOverlayMod.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
           mv -f YoutubeScreen.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
           mv -f fabric.mod.json src/main/resources/ 2>/dev/null || true
 
-          # Создаем минимальный settings.gradle
-          echo 'rootProject.name = "youtube-overlay"' > settings.gradle
+          # Создаем settings.gradle
+          cat << 'EOF' > settings.gradle
+          rootProject.name = "youtube-overlay-mod"
+          EOF
 
-      - name: Build with Gradle CLI
+          # Создаем build.gradle с поддержкой Fabric Loom
+          cat << 'EOF' > build.gradle
+          plugins {
+              id 'fabric-loom' version '1.6-SNAPSHOT'
+              id 'maven-publish'
+          }
+
+          version = "1.0.0"
+          group = "com.example"
+
+          repositories {
+              mavenCentral()
+          }
+
+          dependencies {
+              minecraft "com.mojang:minecraft:1.21"
+              mappings "net.fabricmc:yarn:1.21+build.1:v2"
+              modImplementation "net.fabricmc:fabric-loader:0.15.11"
+              modImplementation "net.fabricmc.fabric-api:fabric-api:0.97.0+1.21"
+          }
+
+          java {
+              sourceCompatibility = JavaVersion.VERSION_21
+              targetCompatibility = JavaVersion.VERSION_21
+          }
+          EOF
+
+      - name: Build with Gradle
         run: |
-          # Скачиваем gradle сборщик прямо на сервер для компиляции мода под Fabric
-          gradle wrapper --gradle-version 8.5
+          gradle wrapper --gradle-version 8.8
           ./gradlew build
 
       - name: Upload Build Artifact
