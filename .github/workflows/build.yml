@@ -20,12 +20,12 @@ jobs:
         with:
           cache-disabled: true
 
-      - name: Generate Fabric Project Structure & Build Files
+      - name: Prepare Project Structure
         run: |
           mkdir -p src/main/java/com/example/youtubeoverlay
           mkdir -p src/main/resources
           
-          # Перемещаем Java-файлы и ресурсы по правильным папкам
+          # Перемещаем файлы на случай, если они в корне
           mv -f VideoOverlayGui.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
           mv -f YoutubeKeyBinding.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
           mv -f YoutubeOverlayMod.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
@@ -33,11 +33,9 @@ jobs:
           mv -f fabric.mod.json src/main/resources/ 2>/dev/null || true
 
           # Создаем settings.gradle
-          cat << 'EOF' > settings.gradle
-          rootProject.name = "youtube-overlay-mod"
-          EOF
+          echo 'rootProject.name = "youtube-overlay-mod"' > settings.gradle
 
-          # Создаем build.gradle с поддержкой Fabric Loom
+          # Создаем корректный build.gradle под Fabric
           cat << 'EOF' > build.gradle
           plugins {
               id 'fabric-loom' version '1.6-SNAPSHOT'
@@ -64,10 +62,8 @@ jobs:
           }
           EOF
 
-      - name: Build with Gradle
-        run: |
-          gradle wrapper --gradle-version 8.8
-          ./gradlew build
+      - name: Build Mod with Gradle
+        run: gradle build
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
