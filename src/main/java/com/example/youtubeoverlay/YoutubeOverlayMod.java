@@ -10,9 +10,7 @@ public class YoutubeOverlayMod implements ClientModInitializer {
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (YoutubeKeyBinding.youtubeKey.consumeClick()) {
-                if (client.screen == null) {
-                    client.setScreenAndShow(new YoutubeScreen());
-                }
+                client.setScreenAndShow(new YoutubeScreen());
             }
         });
     }
