@@ -15,27 +15,28 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Compile and Package Direct Jar
+      - name: Build Jar
         run: |
-          mkdir -p build/libs
-          mkdir -p src/main/java/com/example/youtubeoverlay
-          mkdir -p src/main/resources
-          mkdir -p out
+          mkdir -p out/com/example/youtubeoverlay
+          mkdir -p out/resources
 
-          # Раскладываем актуальные файлы мода по папкам
-          mv -f YoutubeKeyBinding.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
-          mv -f YoutubeOverlayMod.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
-          mv -f YoutubeScreen.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
-          mv -f fabric.mod.json src/main/resources/ 2>/dev/null || true
+          # Раскладываем файлы из корня по пакетам
+          cp -f YoutubeKeyBinding.java out/com/example/youtubeoverlay/ 2>/dev/null || true
+          cp -f YoutubeOverlayMod.java out/com/example/youtubeoverlay/ 2>/dev/null || true
+          cp -f YoutubeScreen.java out/com/example/youtubeoverlay/ 2>/dev/null || true
+          cp -f fabric.mod.json out/ 2>/dev/null || true
 
-          # Скачиваем Fabric Loader для базовой структуры
+          # Скачиваем базовую библиотеку Loader
           curl -sL https://maven.fabricmc.net/net/fabricmc/fabric-loader/0.15.11/fabric-loader-0.15.11.jar -o loader.jar
 
-          # Компилируем классы мода
-          javac -encoding UTF-8 -cp loader.jar -d out $(find src/main/java -name "*.java") || true
-          cp -r src/main/resources/* out/ 2>/dev/null || true
+          # Компилируем классы из папки out
+          javac -encoding UTF-8 -cp loader.jar $(find out -name "*.java") || true
 
-          # Упаковываем в готовый .jar файл
+          # Удаляем исходные .java файлы из out, оставляем только скомпилированные .class и fabric.mod.json
+          find out -name "*.java" -type f -delete
+
+          # Собираем правильный .jar архив
+          mkdir -p build/libs
           cd out
           jar -cf ../build/libs/youtube-overlay-1.0.0.jar *
           cd ..
