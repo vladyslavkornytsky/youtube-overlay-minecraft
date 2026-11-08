@@ -1,0 +1,90 @@
+package com.example.youtubeoverlay;
+
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.FilterMode;
+import com.mojang.blaze3d.textures.GpuTextureView;
+import net.dimaskama.mcef.api.MCEFApi;
+import net.dimaskama.mcef.api.MCEFBrowser;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.render.TextureSetup;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.state.gui.BlitRenderState;
+import org.joml.Matrix3x2f;
+
+public final class YoutubeBrowser {
+    private static MCEFBrowser browser;
+    public static int browserW = 960;
+    public static int browserH = 540;
+
+    private static final String AD_JS = """
+        (function(){
+          if(!document.getElementById('yo-style')){
+            var s=document.createElement('style'); s.id='yo-style';
+            s.textContent='#player-ads,#masthead-ad,ytd-ad-slot-renderer,ytd-display-ad-renderer,ytd-promoted-sparkles-web-renderer,ytd-in-feed-ad-layout-renderer,.ytp-ad-overlay-container,.ytp-ad-image-overlay{display:none!important}';
+            document.head.appendChild(s);
+          }
+          var p=document.querySelector('.html5-video-player');
+          var v=document.querySelector('video.html5-main-video')||document.querySelector('video');
+          if(p&&v&&p.classList.contains('ad-showing')){
+            if(isFinite(v.duration)&&v.duration>0){v.currentTime=v.duration;}
+          }
+          var b=document.querySelector('.ytp-skip-ad-button,.ytp-ad-skip-button,.ytp-ad-skip-button-modern,.ytp-ad-skip-button-container button');
+          if(b){b.click();}
+        })();
+        """;
+
+    private YoutubeBrowser() {}
+
+    public static MCEFBrowser get() {
+        if (browser == null) {
+            browser = MCEFApi.getInstance().createBrowser("https://www.youtube.com", false);
+            browser.setWindowlessFrameRate(30);
+            browser.resize(browserW, browserH);
+        }
+        return browser;
+    }
+
+    public static MCEFBrowser peek() {
+        return browser;
+    }
+
+    public static void resize(int w, int h) {
+        browserW = w;
+        browserH = h;
+        if (browser != null) {
+            browser.resize(w, h);
+        }
+    }
+
+    public static void close() {
+        if (browser != null) {
+            browser.close();
+            browser = null;
+        }
+    }
+
+    public static void runAdSkipper() {
+        if (browser != null) {
+            browser.executeJavaScript(AD_JS, "https://www.youtube.com", 0);
+        }
+    }
+
+    public static void draw(GuiGraphicsExtractor g, int x, int y, int w, int h) {
+        if (browser == null) {
+            return;
+        }
+        GpuTextureView view = browser.getTextureView();
+        if (view == null) {
+            return;
+        }
+        g.guiRenderState.addGuiElement(new BlitRenderState(
+                RenderPipelines.GUI_TEXTURED,
+                TextureSetup.singleTexture(view, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR)),
+                new Matrix3x2f(g.pose()),
+                x, y, x + w, y + h,
+                0.0F, 1.0F, 0.0F, 1.0F,
+                0xFFFFFFFF,
+                g.scissorStack.peek()
+        ));
+    }
+}
