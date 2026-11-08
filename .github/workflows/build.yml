@@ -15,47 +15,23 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Compile Mod Directly
+      - name: Build with Gradle Loom
         run: |
-          mkdir -p build/libs
           mkdir -p src/main/java/com/example/youtubeoverlay
           mkdir -p src/main/resources
-          mkdir -p out
-
-          # Раскладываем файлы по папкам
+          
+          # Раскладываем файлы по стандартной структуре Fabric
           mv -f YoutubeKeyBinding.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
           mv -f YoutubeOverlayMod.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
           mv -f YoutubeScreen.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
           mv -f fabric.mod.json src/main/resources/ 2>/dev/null || true
 
-          # Скачиваем Fabric Loader
-          curl -sL https://maven.fabricmc.net/net/fabricmc/fabric-loader/0.20.1/fabric-loader-0.20.1.jar -o loader.jar
-
-          # Скачиваем официальный клиент Minecraft 26.2 по манифесту Mojang
-          python3 -c "
-          import urllib.request, json
-          try:
-              m = json.loads(urllib.request.urlopen('https://launchermeta.mojang.com/mc/game/version_manifest_v2.json').read().decode())
-              v_url = next(v['url'] for v in m['versions'] if v['id'] == '26.2')
-              v_data = json.loads(urllib.request.urlopen(v_url).read().decode())
-              c_url = v_data['downloads']['client']['url']
-              urllib.request.urlretrieve(c_url, 'minecraft_client.jar')
-              print('Client downloaded.')
-          except Exception as e:
-              print('Error:', e)
-          "
-
-          # Компилируем классы мода, используя клиент как библиотеку путей
-          javac -encoding UTF-8 -cp "minecraft_client.jar:loader.jar" -d out $(find src/main/java -name "*.java")
-          cp -r src/main/resources/* out/ 2>/dev/null || true
-
-          # Упаковываем в рабочий .jar
-          cd out
-          jar -cf ../build/libs/youtube-overlay-1.0.0.jar *
-          cd ..
+          gradle wrapper --gradle-version 8.8
+          chmod +x gradlew
+          ./gradlew build --no-daemon
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
           name: youtube-overlay-mod-jar
-          path: build/libs/youtube-overlay-1.0.0.jar
+          path: build/libs/*.jar
