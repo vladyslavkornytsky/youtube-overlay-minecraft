@@ -8,6 +8,7 @@ import org.lwjgl.glfw.GLFW;
 
 public class YoutubeKeyBinding {
     public static KeyMapping youtubeKey;
+    public static KeyMapping closeKey;
 
     public static void register() {
         KeyMapping.Category category = KeyMapping.Category.register(
@@ -17,6 +18,12 @@ public class YoutubeKeyBinding {
                 "key.youtube-overlay.open",
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_Y,
+                category));
+
+        closeKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                "key.youtube-overlay.close",
+                InputConstants.Type.KEYSYM,
+                GLFW.GLFW_KEY_U,
                 category));
     }
 }
