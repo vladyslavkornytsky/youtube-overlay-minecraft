@@ -16,8 +16,3 @@ public class YoutubeOverlayMod implements ClientModInitializer {
         });
     }
 }
-
-    public static void startVideo(String url) {
-        currentUrl = url;
-    }
-}
