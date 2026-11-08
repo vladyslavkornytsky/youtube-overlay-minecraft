@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "youtube-overlay",
+  "version": "${version}",
+  "name": "YouTube Overlay",
+  "description": "Смотрите YouTube видео в игре с минимизацией",
+  "authors": ["User"],
+  "contact": {},
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.example.youtubeoverlay.YoutubeOverlayMod"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.15.0",
+    "minecraft": "~1.20",
+    "java": ">=17"
+  }
+}
