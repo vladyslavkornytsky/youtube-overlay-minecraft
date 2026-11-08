@@ -15,30 +15,32 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Compile and Build Mod Jar
+      - name: Validate Gradle Wrapper
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-disabled: true
+
+      - name: Create Gradle Files for Build
         run: |
-          mkdir -p build/libs
+          # Создаем структуру папок мода
           mkdir -p src/main/java/com/example/youtubeoverlay
           mkdir -p src/main/resources
-          mkdir -p out
-
-          # 1. Перемещаем исходные файлы по правильной структуре пакетов
+          
+          # Перемещаем ваши файлы на свои места
           mv -f VideoOverlayGui.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
           mv -f YoutubeKeyBinding.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
           mv -f YoutubeOverlayMod.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
           mv -f YoutubeScreen.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
           mv -f fabric.mod.json src/main/resources/ 2>/dev/null || true
 
-          # 2. Компилируем .java файлы в исполняемые .class файлы (с учетом Fabric API)
-          javac -d out $(find src/main/java -name "*.java")
+          # Создаем минимальный settings.gradle
+          echo 'rootProject.name = "youtube-overlay"' > settings.gradle
 
-          # 3. Добавляем конфигурационный файл Fabric в корень сборки
-          cp -r src/main/resources/* out/ 2>/dev/null || true
-
-          # 4. Запаковываем скомпилированные классы в готовый архив мода
-          cd out
-          jar -cf ../build/libs/youtube-overlay-1.0.0.jar *
-          cd ..
+      - name: Build with Gradle CLI
+        run: |
+          # Скачиваем gradle сборщик прямо на сервер для компиляции мода под Fabric
+          gradle wrapper --gradle-version 8.5
+          ./gradlew build
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
