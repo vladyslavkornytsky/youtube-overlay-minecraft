@@ -29,11 +29,12 @@ jobs:
           mv -f YoutubeScreen.java src/main/java/com/example/youtubeoverlay/ 2>/dev/null || true
           mv -f fabric.mod.json src/main/resources/ 2>/dev/null || true
 
-          # Скачиваем Fabric API и Loader библиотеки для компиляции
-          curl -sL https://maven.fabricmc.net/net/fabricmc/fabric-loader/0.15.11/fabric-loader-0.15.11.jar -o loader.jar
-          
-          # Компилируем классы
-          javac -encoding UTF-8 -cp loader.jar -d out $(find src/main/java -name "*.java") || true
+          # Скачиваем зависимости (Fabric Loader и Fabric API), чтобы компилятор видел классы Minecraft
+          curl -sL https://maven.fabricmc.net/net/fabricmc/fabric-loader/0.15.11/fabric-loader-0.15.11.jar -o libs.jar
+          curl -sL https://maven.fabricmc.net/net/fabricmc/fabric-api/0.97.0+1.21/fabric-api-0.97.0+1.21.jar -o fapi.jar
+
+          # Компилируем классы с подключением библиотек
+          javac -encoding UTF-8 -cp "libs.jar:fapi.jar" -d out $(find src/main/java -name "*.java")
           cp -r src/main/resources/* out/ 2>/dev/null || true
 
           # Упаковываем в готовый .jar
