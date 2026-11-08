@@ -1,1 +1,8 @@
-rootProject.name = "youtube-overlay-mod"
+pluginManagement {
+    repositories {
+        maven { url = "https://maven.fabricmc.net/" }
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+rootProject.name = "youtube-overlay"
