@@ -1,19 +1,22 @@
 package com.example.youtubeoverlay;
 
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
+import com.mojang.blaze3d.platform.InputConstants;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.resources.Identifier;
 import org.lwjgl.glfw.GLFW;
 
 public class YoutubeKeyBinding {
-    public static KeyBinding youtubeKey;
+    public static KeyMapping youtubeKey;
 
     public static void register() {
-        youtubeKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        KeyMapping.Category category = KeyMapping.Category.register(
+                Identifier.fromNamespaceAndPath("youtube-overlay", "main"));
+
+        youtubeKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.youtube-overlay.open",
-                InputUtil.Type.KEYSYM,
+                InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_Y,
-                "category.youtube-overlay.general"
-        ));
+                category));
     }
 }
