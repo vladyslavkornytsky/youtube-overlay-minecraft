@@ -23,20 +23,53 @@ public final class YoutubeBrowser {
     public static int browserW = 960;
     public static int browserH = 540;
 
-    private static final String AD_JS = """
+   private static final String AD_JS = """
         (function(){
-          if(!document.getElementById('yo-style')){
-            var s=document.createElement('style'); s.id='yo-style';
-            s.textContent='#player-ads,#masthead-ad,ytd-ad-slot-renderer,ytd-display-ad-renderer,ytd-promoted-sparkles-web-renderer,ytd-in-feed-ad-layout-renderer,.ytp-ad-overlay-container,.ytp-ad-image-overlay{display:none!important}';
-            document.head.appendChild(s);
+          if(window.__yoInstalled){return;}
+          window.__yoInstalled=true;
+
+          function strip(o){
+            try{
+              if(o&&typeof o==='object'){
+                delete o.adPlacements; delete o.playerAds; delete o.adSlots;
+                if(o.playerResponse){
+                  delete o.playerResponse.adPlacements;
+                  delete o.playerResponse.playerAds;
+                  delete o.playerResponse.adSlots;
+                }
+              }
+            }catch(e){}
+            return o;
           }
-          var p=document.querySelector('.html5-video-player');
-          var v=document.querySelector('video.html5-main-video')||document.querySelector('video');
-          if(p&&v&&p.classList.contains('ad-showing')){
-            if(isFinite(v.duration)&&v.duration>0){v.currentTime=v.duration;}
-          }
-          var b=document.querySelector('.ytp-skip-ad-button,.ytp-ad-skip-button,.ytp-ad-skip-button-modern,.ytp-ad-skip-button-container button');
-          if(b){b.click();}
+          var pj=JSON.parse;
+          JSON.parse=function(){return strip(pj.apply(this,arguments));};
+          var rj=Response.prototype.json;
+          Response.prototype.json=function(){return rj.apply(this,arguments).then(strip);};
+
+          var s=document.createElement('style');
+          s.textContent='#player-ads,#masthead-ad,ytd-ad-slot-renderer,ytd-display-ad-renderer,ytd-promoted-sparkles-web-renderer,ytd-in-feed-ad-layout-renderer,ytd-banner-promo-renderer,.ytp-ad-overlay-container,.ytp-ad-image-overlay{display:none!important}';
+          document.head.appendChild(s);
+
+          setInterval(function(){
+            var p=document.querySelector('.html5-video-player');
+            var v=document.querySelector('video.html5-main-video')||document.querySelector('video');
+            if(p&&v){
+              if(p.classList.contains('ad-showing')){
+                if(!window.__yoAd){window.__yoAd=true;window.__yoMuted=v.muted;}
+                v.muted=true;
+                v.playbackRate=16;
+                if(isFinite(v.duration)&&v.duration>0){v.currentTime=v.duration;}
+              } else if(window.__yoAd){
+                window.__yoAd=false;
+                v.muted=window.__yoMuted;
+                v.playbackRate=1;
+              }
+            }
+            var b=document.querySelector('.ytp-skip-ad-button,.ytp-ad-skip-button,.ytp-ad-skip-button-modern,.ytp-ad-skip-button-container button');
+            if(b){b.click();}
+            var c=document.querySelector('.ytp-ad-overlay-close-button');
+            if(c){c.click();}
+          },100);
         })();
         """;
 
